@@ -116,7 +116,7 @@ def main():
             except Exception as error:
                 print(error)
                 continue
-            
+
         # get the total length of the playlist
         total_length = sum(video_lengths)
 
@@ -133,7 +133,7 @@ def main():
 
         # write length of playlist if the video is seen at 1.5x speed
         one_point_five_x_speed = [
-            int(video_length * 1.5) for video_length in video_lengths
+            int(video_length / 1.5) for video_length in video_lengths
         ]
         hours, remainder = divmod(sum(one_point_five_x_speed), 3600)
         minutes, seconds = divmod(remainder, 60)
@@ -142,7 +142,7 @@ def main():
         )
 
         # write length of playlist if the video is seen at 2x speed
-        two_x_speed = [int(video_length * 2) for video_length in video_lengths]
+        two_x_speed = [int(video_length / 2) for video_length in video_lengths]
         hours, remainder = divmod(sum(two_x_speed), 3600)
         minutes, seconds = divmod(remainder, 60)
         st.write(
@@ -151,7 +151,7 @@ def main():
 
         # write length of playlist if the video is seen at 2.5x speed
         two_point_five_x_speed = [
-            int(video_length * 2.5) for video_length in video_lengths
+            int(video_length / 2.5) for video_length in video_lengths
         ]
         hours, remainder = divmod(sum(two_point_five_x_speed), 3600)
         minutes, seconds = divmod(remainder, 60)
@@ -160,7 +160,7 @@ def main():
         )
 
         # write length of playlist if the video is seen at 3x speed
-        three_x_speed = [int(video_length * 3) for video_length in video_lengths]
+        three_x_speed = [int(video_length / 3) for video_length in video_lengths]
         hours, remainder = divmod(sum(three_x_speed), 3600)
         minutes, seconds = divmod(remainder, 60)
         st.write(
@@ -169,7 +169,7 @@ def main():
 
         # write length of playlist if the video is seen at 3.5x speed
         three_point_five_x_speed = [
-            int(video_length * 3.5) for video_length in video_lengths
+            int(video_length / 3.5) for video_length in video_lengths
         ]
         hours, remainder = divmod(sum(three_point_five_x_speed), 3600)
         minutes, seconds = divmod(remainder, 60)
@@ -178,7 +178,7 @@ def main():
         )
 
         # write length of playlist if the video is seen at 4x speed
-        four_x_speed = [int(video_length * 4) for video_length in video_lengths]
+        four_x_speed = [int(video_length / 4) for video_length in video_lengths]
         hours, remainder = divmod(sum(four_x_speed), 3600)
         minutes, seconds = divmod(remainder, 60)
         st.write(
@@ -187,7 +187,7 @@ def main():
 
         # write length of playlist if the video is seen at 4.5x speed
         four_point_five_x_speed = [
-            int(video_length * 4.5) for video_length in video_lengths
+            int(video_length / 4.5) for video_length in video_lengths
         ]
         hours, remainder = divmod(sum(four_point_five_x_speed), 3600)
         minutes, seconds = divmod(remainder, 60)
@@ -196,7 +196,7 @@ def main():
         )
 
         # write length of playlist if the video is seen at 5x speed
-        five_x_speed = [int(video_length * 5) for video_length in video_lengths]
+        five_x_speed = [int(video_length / 5) for video_length in video_lengths]
         hours, remainder = divmod(sum(five_x_speed), 3600)
         minutes, seconds = divmod(remainder, 60)
 
@@ -206,7 +206,7 @@ def main():
 
         # write length of playlist if the video is seen at 5.5x speed
         five_point_five_x_speed = [
-            int(video_length * 5.5) for video_length in video_lengths
+            int(video_length / 5.5) for video_length in video_lengths
         ]
         hours, remainder = divmod(sum(five_point_five_x_speed), 3600)
         minutes, seconds = divmod(remainder, 60)
@@ -215,7 +215,7 @@ def main():
         )
 
         # write length of playlist if the video is seen at 6x speed
-        six_x_speed = [int(video_length * 6) for video_length in video_lengths]
+        six_x_speed = [int(video_length / 6) for video_length in video_lengths]
         hours, remainder = divmod(sum(six_x_speed), 3600)
         minutes, seconds = divmod(remainder, 60)
         st.write(
@@ -224,7 +224,7 @@ def main():
 
         # write length of playlist if the video is seen at 6.5x speed
         six_point_five_x_speed = [
-            int(video_length * 6.5) for video_length in video_lengths
+            int(video_length / 6.5) for video_length in video_lengths
         ]
         hours, remainder = divmod(sum(six_point_five_x_speed), 3600)
         minutes, seconds = divmod(remainder, 60)
@@ -233,7 +233,7 @@ def main():
         )
 
         # write length of playlist if the video is seen at 7x speed
-        seven_x_speed = [int(video_length * 7) for video_length in video_lengths]
+        seven_x_speed = [int(video_length / 7) for video_length in video_lengths]
         hours, remainder = divmod(sum(seven_x_speed), 3600)
         minutes, seconds = divmod(remainder, 60)
         st.write(
@@ -242,7 +242,7 @@ def main():
 
         # write length of playlist if the video is seen at 7.5x speed
         seven_point_five_x_speed = [
-            int(video_length * 7.5) for video_length in video_lengths
+            int(video_length / 7.5) for video_length in video_lengths
         ]
         hours, remainder = divmod(sum(seven_point_five_x_speed), 3600)
         minutes, seconds = divmod(remainder, 60)
@@ -251,7 +251,7 @@ def main():
         )
 
         # write length of playlist if the video is seen at 8x speed
-        eight_x_speed = [int(video_length * 8) for video_length in video_lengths]
+        eight_x_speed = [int(video_length / 8) for video_length in video_lengths]
         hours, remainder = divmod(sum(eight_x_speed), 3600)
         minutes, seconds = divmod(remainder, 60)
         st.write(
