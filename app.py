@@ -95,7 +95,7 @@ def main():
     st.write("This app will tell you the complete length of a playlist")
 
     # give a label to the input box
-    playlist_link = st.text_input("Enter the playlist link")
+    playlist_link = st.text_input("Enter the playlist link",autocomplete="url")
 
     # give a label to the button
     if st.button("Calculate"):
