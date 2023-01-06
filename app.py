@@ -55,9 +55,9 @@ def return_video_ids_from_playlist_id_from_invidious(
             print(response.text)
             continue
                     # dedup the video ids
-        video_ids = return_de_duped_list(video_ids)
+    video_ids = return_de_duped_list(video_ids)
 
-        return video_ids
+    return video_ids
 
 def info_from_video_id_from_invidious_api(video_id):
     """Returns the info of a video from its video id."""
@@ -113,6 +113,7 @@ def main():
             try:
                 video_lengths.append(video_info["lengthSeconds"])
             except TypeError:
+                print("TypeError")
                 continue
             except Exception as error:
                 print(error)
