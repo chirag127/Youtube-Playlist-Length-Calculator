@@ -2,90 +2,24 @@
 
 
 import contextlib
-import traceback
-import requests
+from concurrent.futures import ThreadPoolExecutor
 # import Iterable
 from typing import List
 
+import requests
 import streamlit as st
-from concurrent.futures import ThreadPoolExecutor
+
 PING_TIMEOUT_TIME = 0.4
 
 
-def get_urls(urls, timeout=PING_TIMEOUT_TIME):
+def get_urls(urls, timeout=10):
     """Returns a list of responses from the given urls."""
-    with contextlib.ExitStack() as stack:
-        sessions = [stack.enter_context(requests.Session()) for _ in urls]
-        for session in sessions:
-            session.mount("https://", requests.adapters.HTTPAdapter(max_retries=3))
-            session.mount("http://", requests.adapters.HTTPAdapter(max_retries=3))
-        responses = [
-            session.get(url, timeout=timeout) for session, url in zip(sessions, urls)
-        ]
-    return responses
-
-
-def get_live_urls(urls, timeout=PING_TIMEOUT_TIME):
-    """Returns the live urls."""
-    try:
-        instances = []
-        responses = get_urls(urls, timeout=timeout)
-        for response, url in zip(responses, urls):
-            if response.ok:
-                url = response.history[0].url if response.history else response.url
-                # remove the trailing slash
-                if url.endswith("/"):
-                    url = url[:-1]
-                instances_with_elapsedtime = (url, response.elapsed.total_seconds())
-                instances.append(instances_with_elapsedtime)
-        instances.sort(key=lambda x: x[1])
-
-        return [instance[0] for instance in instances]
-
-    except Exception as error:  # pylint: disable=broad-except
-        print(error)
-        traceback.print_exc()
-        return get_live_urls(urls, timeout=timeout * 2)
-
-
-
-def get_invidious_instances_from_json():
-    """scrape domain instances from my URl"""
-    url = "https://api.invidious.io/instances.json?pretty=1&sort_by=type,users"
-    response = requests.get(url)
-    instances = []
-    instances_api = []
-    if response.ok:
-
-        data = response.json()
-        for instance in data:
-            type_of_instance = instance[1]["type"]
-            url = instance[1]["uri"]
-
-            if type_of_instance == "https":
-                instances.append(url)
-                api = instance[1]["api"]
-                if api:
-                    instances_api.append(url)
-    else:
-        # print_status_and_text_from_response(response)
-        print("Error getting invidious instances from json")
-        print(response.text)
-
-
-    live_instances = get_live_urls(instances)
-    live_instances_api = get_live_urls(instances_api)
-
-    return live_instances, live_instances_api
-
-
-try:
-
-    invidious_instances, invidious_instances_api = get_invidious_instances_from_json()
-
-except Exception as e:  # pylint: disable=broad-except
-    print(e)
-    traceback.print_exc()
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        with contextlib.suppress(Exception):
+            responses = executor.map(
+                lambda url: requests.get(url, timeout=timeout), urls
+            )
+            return responses
 
 def return_de_duped_list(list_):
     """Returns a list with no duplicates."""
@@ -96,43 +30,40 @@ def return_video_ids_from_playlist_id_from_invidious(
     playlist_id: str,
 ) -> List[str]:
     """Returns a list of video ids from a playlist id."""
-    for instance in invidious_instances_api:
-        urls = [
-            f"{instance}/api/v1/playlists/{playlist_id}?page={page}"
-            for page in range(1, 2)
-        ]
-        urls = return_de_duped_list(urls)
-        responses = get_urls(urls)
-        video_ids = []
-        for response in responses:
-            if not response.ok:
-                print(response.text)
+    urls = [
+        f"https://vid.puffyan.us//api/v1/playlists/{playlist_id}?page={page}"
+        for page in range(1, 2)
+    ]
+    urls = return_de_duped_list(urls)
+    responses = get_urls(urls)
+    video_ids = []
+    for response in responses:
+        if not response.ok:
+            print(response.text)
 
-                continue
-            try:
-                data = response.json()
-                videos = data["videos"]
-                video_ids.extend(video["videoId"] for video in videos)
-            except Exception as error:  # pylint: disable=broad-except
-                print(error)
-                print(response.text)
-                continue
-            return video_ids
+            continue
+        try:
+            data = response.json()
+            videos = data["videos"]
+            video_ids.extend(video["videoId"] for video in videos)
+        except Exception as error:  # pylint: disable=broad-except
+            print("function return_video_ids_from_playlist_id_from_invidious have error", error)
+            print(response.text)
+            continue
+        return video_ids
 
 
 def info_from_video_id_from_invidious_api(video_id):
     """Returns the info of a video from its video id."""
     try:
-        for instance in invidious_instances_api:
-            api_instance = instance
-            url = f"{api_instance}/api/v1/videos/{video_id}"
-            response = requests.get(url, timeout=10)
+        url = f"https://vid.puffyan.us//api/v1/videos/{video_id}"
+        response = requests.get(url, timeout=10)
 
-            if response.ok:
-                response = response.json()
-                return response
-            if response.status_code == 500:
-                return None
+        if response.ok:
+            response = response.json()
+            return response
+        if response.status_code == 500:
+            return None
 
     except Exception as error:  # pylint: disable=broad-except
 
@@ -185,8 +116,99 @@ def main():
         # display the total length
         st.write(f"Total length of the playlist is {hours} hours {minutes} minutes {seconds} seconds")
 
+        # write length of playlist if the video is seen at 1.5x speed, 2x speed, 2.5x speed, 3x speed, 3.5x speed, 4x speed, 4.5x speed, 5x speed, 5.5x speed, 6x speed, 6.5x speed, 7x speed, 7.5x speed, 8x speed, 8.5x speed, 9x speed, 9.5x speed, 10x speed
+
+        # write length of playlist if the video is seen at 1.5x speed
+        one_point_five_x_speed = [int(video_length * 1.5) for video_length in video_lengths]
+        hours, remainder = divmod(sum(one_point_five_x_speed), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        st.write(f"Total length of the playlist if the video is seen at 1.5x speed is {hours} hours {minutes} minutes {seconds} seconds")
+
+        # write length of playlist if the video is seen at 2x speed
+        two_x_speed = [int(video_length * 2) for video_length in video_lengths]
+        hours, remainder = divmod(sum(two_x_speed), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        st.write(f"Total length of the playlist if the video is seen at 2x speed is {hours} hours {minutes} minutes {seconds} seconds")
+
+        # write length of playlist if the video is seen at 2.5x speed
+        two_point_five_x_speed = [int(video_length * 2.5) for video_length in video_lengths]
+        hours, remainder = divmod(sum(two_point_five_x_speed), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        st.write(f"Total length of the playlist if the video is seen at 2.5x speed is {hours} hours {minutes} minutes {seconds} seconds")
+
+        # write length of playlist if the video is seen at 3x speed
+        three_x_speed = [int(video_length * 3) for video_length in video_lengths]
+        hours, remainder = divmod(sum(three_x_speed), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        st.write(f"Total length of the playlist if the video is seen at 3x speed is {hours} hours {minutes} minutes {seconds} seconds")
+
+        # write length of playlist if the video is seen at 3.5x speed
+        three_point_five_x_speed = [int(video_length * 3.5) for video_length in video_lengths]
+        hours, remainder = divmod(sum(three_point_five_x_speed), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        st.write(f"Total length of the playlist if the video is seen at 3.5x speed is {hours} hours {minutes} minutes {seconds} seconds")
+
+        # write length of playlist if the video is seen at 4x speed
+        four_x_speed = [int(video_length * 4) for video_length in video_lengths]
+        hours, remainder = divmod(sum(four_x_speed), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        st.write(f"Total length of the playlist if the video is seen at 4x speed is {hours} hours {minutes} minutes {seconds} seconds")
+
+        # write length of playlist if the video is seen at 4.5x speed
+        four_point_five_x_speed = [int(video_length * 4.5) for video_length in video_lengths]
+        hours, remainder = divmod(sum(four_point_five_x_speed), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        st.write(f"Total length of the playlist if the video is seen at 4.5x speed is {hours} hours {minutes} minutes {seconds} seconds")
+
+        # write length of playlist if the video is seen at 5x speed
+        five_x_speed = [int(video_length * 5) for video_length in video_lengths]
+        hours, remainder = divmod(sum(five_x_speed), 3600)
+        minutes, seconds = divmod(remainder, 60)
+
+        st.write(f"Total length of the playlist if the video is seen at 5x speed is {hours} hours {minutes} minutes {seconds} seconds")
+
+        # write length of playlist if the video is seen at 5.5x speed
+        five_point_five_x_speed = [int(video_length * 5.5) for video_length in video_lengths]
+        hours, remainder = divmod(sum(five_point_five_x_speed), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        st.write(f"Total length of the playlist if the video is seen at 5.5x speed is {hours} hours {minutes} minutes {seconds} seconds")
+
+        # write length of playlist if the video is seen at 6x speed
+        six_x_speed = [int(video_length * 6) for video_length in video_lengths]
+        hours, remainder = divmod(sum(six_x_speed), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        st.write(f"Total length of the playlist if the video is seen at 6x speed is {hours} hours {minutes} minutes {seconds} seconds")
+
+        # write length of playlist if the video is seen at 6.5x speed
+        six_point_five_x_speed = [int(video_length * 6.5) for video_length in video_lengths]
+        hours, remainder = divmod(sum(six_point_five_x_speed), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        st.write(f"Total length of the playlist if the video is seen at 6.5x speed is {hours} hours {minutes} minutes {seconds} seconds")
+
+        # write length of playlist if the video is seen at 7x speed
+        seven_x_speed = [int(video_length * 7) for video_length in video_lengths]
+        hours, remainder = divmod(sum(seven_x_speed), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        st.write(f"Total length of the playlist if the video is seen at 7x speed is {hours} hours {minutes} minutes {seconds} seconds")
+
+        # write length of playlist if the video is seen at 7.5x speed
+        seven_point_five_x_speed = [int(video_length * 7.5) for video_length in video_lengths]
+        hours, remainder = divmod(sum(seven_point_five_x_speed), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        st.write(f"Total length of the playlist if the video is seen at 7.5x speed is {hours} hours {minutes} minutes {seconds} seconds")
+
+        # write length of playlist if the video is seen at 8x speed
+        eight_x_speed = [int(video_length * 8) for video_length in video_lengths]
+        hours, remainder = divmod(sum(eight_x_speed), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        st.write(f"Total length of the playlist if the video is seen at 8x speed is {hours} hours {minutes} minutes {seconds} seconds")
+
         # write the length of each video
         for video_info, video_length in zip(video_infos, video_lengths):
             hours, remainder = divmod(video_length, 3600)
             minutes, seconds = divmod(remainder, 60)
             st.write(f"{video_info['title']} is {hours} hours {minutes} minutes {seconds} seconds")
+
+
+if __name__ == "__main__":
+    main()
