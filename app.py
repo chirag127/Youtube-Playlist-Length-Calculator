@@ -13,7 +13,6 @@ import streamlit as st
 
 PING_TIMEOUT_TIME = 0.4
 
-@lru_cache(maxsize=None)
 def get_urls(urls, timeout=10):
     """Returns a list of responses from the given urls."""
     with ThreadPoolExecutor(max_workers=1000) as executor:
@@ -21,7 +20,7 @@ def get_urls(urls, timeout=10):
             responses = executor.map(
                 lambda url: requests.get(url, timeout=timeout), urls
             )
-            return responses
+            return list(responses)
 
 
 def return_de_duped_list(list_):
