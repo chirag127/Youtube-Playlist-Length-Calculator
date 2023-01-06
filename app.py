@@ -45,6 +45,8 @@ def return_video_ids_from_playlist_id_from_invidious(
             data = response.json()
             videos = data["videos"]
             video_ids.extend(video["videoId"] for video in videos)
+
+
         except Exception as error:  # pylint: disable=broad-except
             print(
                 "function return_video_ids_from_playlist_id_from_invidious have error",
@@ -52,13 +54,16 @@ def return_video_ids_from_playlist_id_from_invidious(
             )
             print(response.text)
             continue
+                    # dedup the video ids
+        video_ids = return_de_duped_list(video_ids)
+
         return video_ids
 
 def info_from_video_id_from_invidious_api(video_id):
     """Returns the info of a video from its video id."""
     try:
         url = f"https://vid.puffyan.us//api/v1/videos/{video_id}"
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=100)
 
         if response.ok:
             response = response.json()
