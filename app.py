@@ -27,7 +27,6 @@ def return_de_duped_list(list_):
     """Returns a list with no duplicates."""
     return list(set(list_))
 
-@lru_cache(maxsize=None)
 def return_video_ids_from_playlist_id_from_invidious(
     playlist_id: str,
 ) -> List[str]:
