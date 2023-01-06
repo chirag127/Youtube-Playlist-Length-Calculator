@@ -97,7 +97,7 @@ def main():
         # video_infos = [info_from_video_id_from_invidious_api(video_id) for video_id in video_ids]
 
         with st.spinner("Calculating..."):
-            with ThreadPoolExecutor(max_workers=10) as executor:
+            with ThreadPoolExecutor(max_workers=1000) as executor:
                 video_infos = executor.map(
                     info_from_video_id_from_invidious_api, video_ids
                 )
