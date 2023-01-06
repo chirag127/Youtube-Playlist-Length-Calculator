@@ -35,7 +35,7 @@ def return_video_ids_from_playlist_id_from_invidious(
     ]
     urls = return_de_duped_list(urls)
     responses = get_urls(urls)
-    video_ids = []
+    video_ids_and_length = []
     for response in responses:
         if not response.ok:
             print(response.text)
@@ -44,7 +44,10 @@ def return_video_ids_from_playlist_id_from_invidious(
         try:
             data = response.json()
             videos = data["videos"]
-            video_ids.extend(video["videoId"] for video in videos)
+            for video in videos:
+                video_ids_and_length.append((video["videoId"], video["lengthSeconds"]))
+
+
 
 
         except Exception as error:  # pylint: disable=broad-except
@@ -55,9 +58,14 @@ def return_video_ids_from_playlist_id_from_invidious(
             print(response.text)
             continue
                     # dedup the video ids
-    video_ids = return_de_duped_list(video_ids)
+    # remove duplicates from video_ids_and_length
+    video_ids_and_length_no_duplicates = []
 
-    return video_ids
+    for video_id_and_length in video_ids_and_length:
+        if video_id_and_length not in video_ids_and_length_no_duplicates:
+            video_ids_and_length_no_duplicates.append(video_id_and_length)
+
+    return video_ids_and_length
 
 def info_from_video_id_from_invidious_api(video_id):
     """Returns the info of a video from its video id."""
@@ -96,28 +104,39 @@ def main():
         playlist_id = playlist_link.split("list=")[1]
 
         # get the video ids from the playlist id
-        video_ids = return_video_ids_from_playlist_id_from_invidious(playlist_id)
+        video_ids_and_length = return_video_ids_from_playlist_id_from_invidious(
+            playlist_id
+        )
 
-        # # get the info of the videos from the video ids concurrently
-        # video_infos = [info_from_video_id_from_invidious_api(video_id) for video_id in video_ids]
-
-        with st.spinner("Calculating..."):
-            with ThreadPoolExecutor(max_workers=1000) as executor:
-                video_infos = executor.map(
-                    info_from_video_id_from_invidious_api, video_ids
-                )
-
-        # get the length of the videos
+        # get the video ids from the video ids and length
+        video_ids = []
         video_lengths = []
-        for video_info in video_infos:
-            try:
-                video_lengths.append(video_info["lengthSeconds"])
-            except TypeError:
-                print("TypeError")
-                continue
-            except Exception as error:
-                print(error)
-                continue
+        for video_id_and_length in video_ids_and_length:
+            video_ids.append(video_id_and_length[0])
+            video_lengths.append(video_id_and_length[1])
+
+
+
+        # # # get the info of the videos from the video ids concurrently
+        # # video_infos = [info_from_video_id_from_invidious_api(video_id) for video_id in video_ids]
+
+        # with st.spinner("Calculating..."):
+        #     with ThreadPoolExecutor(max_workers=1000) as executor:
+        #         video_infos = executor.map(
+        #             info_from_video_id_from_invidious_api, video_ids
+        #         )
+
+        # # get the length of the videos
+        # video_lengths = []
+        # for video_info in video_infos:
+        #     try:
+        #         video_lengths.append(video_info["lengthSeconds"])
+        #     except TypeError:
+        #         print("TypeError")
+        #         continue
+        #     except Exception as error:
+        #         print(error)
+        #         continue
 
         # get the total length of the playlist
         total_length = sum(video_lengths)
@@ -259,15 +278,6 @@ def main():
         st.write(
             f"Total length of the playlist if the video is seen at 8x speed is {hours} hours {minutes} minutes {seconds} seconds"
         )
-
-        # write the length of each video
-        for video_info, video_length in zip(video_infos, video_lengths):
-            hours, remainder = divmod(video_length, 3600)
-            minutes, seconds = divmod(remainder, 60)
-            st.write(
-                f"{video_info['title']} is {hours} hours {minutes} minutes {seconds} seconds"
-            )
-
 
 if __name__ == "__main__":
     main()
