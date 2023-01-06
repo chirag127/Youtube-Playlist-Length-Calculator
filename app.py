@@ -31,7 +31,7 @@ def return_video_ids_from_playlist_id_from_invidious(
     """Returns a list of video ids from a playlist id."""
     urls = [
         f"https://vid.puffyan.us//api/v1/playlists/{playlist_id}?page={page}"
-        for page in range(1, 2)
+        for page in range(1, 5)
     ]
     urls = return_de_duped_list(urls)
     responses = get_urls(urls)
