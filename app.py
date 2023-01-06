@@ -1,5 +1,6 @@
 """This module contains functions for getting youtube data."""
 
+from functools import lru_cache
 
 import contextlib
 from concurrent.futures import ThreadPoolExecutor
@@ -12,7 +13,7 @@ import streamlit as st
 
 PING_TIMEOUT_TIME = 0.4
 
-
+@lru_cache(maxsize=None)
 def get_urls(urls, timeout=10):
     """Returns a list of responses from the given urls."""
     with ThreadPoolExecutor(max_workers=1000) as executor:
@@ -27,7 +28,7 @@ def return_de_duped_list(list_):
     """Returns a list with no duplicates."""
     return list(set(list_))
 
-
+@lru_cache(maxsize=None)
 def return_video_ids_from_playlist_id_from_invidious(
     playlist_id: str,
 ) -> List[str]:
@@ -57,7 +58,7 @@ def return_video_ids_from_playlist_id_from_invidious(
             continue
         return video_ids
 
-
+@lru_cache(maxsize=None)
 def info_from_video_id_from_invidious_api(video_id):
     """Returns the info of a video from its video id."""
     try:
