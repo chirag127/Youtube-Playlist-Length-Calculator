@@ -107,8 +107,16 @@ def main():
                 )
 
         # get the length of the videos
-        video_lengths = [video_info["lengthSeconds"] for video_info in video_infos]
-
+        video_lengths = []
+        for video_info in video_infos:
+            try:
+                video_lengths.append(video_info["lengthSeconds"])
+            except TypeError:
+                continue
+            except Exception as error:
+                print(error)
+                continue
+            
         # get the total length of the playlist
         total_length = sum(video_lengths)
 
