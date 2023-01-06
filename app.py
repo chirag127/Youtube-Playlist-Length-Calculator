@@ -18,7 +18,7 @@ def get_urls(urls, timeout=10):
             responses = executor.map(
                 lambda url: requests.get(url, timeout=timeout), urls
             )
-            return list(responses)
+            return responses
 
 
 def return_de_duped_list(list_):
